@@ -144,19 +144,31 @@ class StudentManagementSystem:
     def update_student(self, student_id: str, updated_data: Dict):
         students = []
         updated = False
-        with open(self.filename, 'r') as file:
-            reader = csv.DictReader(file)
-            for student in reader:
+        
+        if self.file_type == '.csv':
+            with open(self.filename, 'r') as file:
+                reader = csv.DictReader(file)
+                for student in reader:
+                    if student['id'] == student_id:
+                        student.update(updated_data)
+                        updated = True
+                    students.append(student)
+
+            if updated:
+                with open(self.filename, 'w', newline='') as file:
+                    writer = csv.DictWriter(file, fieldnames=self.headers)
+                    writer.writeheader()
+                    writer.writerows(students)
+        else:  # JSON
+            students = self.read_json_file()
+            for student in students:
                 if student['id'] == student_id:
                     student.update(updated_data)
                     updated = True
-                students.append(student)
-
+            if updated:
+                self.write_json_file(students)
+                
         if updated:
-            with open(self.filename, 'w', newline='') as file:
-                writer = csv.DictWriter(file, fieldnames=self.headers)
-                writer.writeheader()
-                writer.writerows(students)
             print("Student updated successfully!")
         else:
             print("Student not found!")
